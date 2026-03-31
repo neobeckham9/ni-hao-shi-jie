@@ -88,15 +88,79 @@
   </style>
 </head>
 <body>
-  <button onclick="document.getElementById('message').textContent = '你好世界'">点击我</button>
+  <button onclick="toggleHello()">点击我</button>
   <p id="message"></p>
-  <button class="secret-btn" onclick="document.getElementById('overlay').classList.add('show')">点击我，我知道你的秘密</button>
+  <button class="secret-btn" onclick="showSecret()">点击我，我知道你的秘密</button>
 
   <div id="overlay" class="overlay" onclick="if(event.target===this)this.classList.remove('show')">
     <div class="dialog">
-      <p>🌙 深夜三点，你还没睡。<br>不是因为失眠，<br>而是有些事情，<br>只有在黑暗中才敢去想。<br><br>我都知道。</p>
+      <p id="secret-text"></p>
       <button class="close-btn" onclick="document.getElementById('overlay').classList.remove('show')">关上这扇门</button>
     </div>
   </div>
+
+  <script>
+    function toggleHello() {
+      const msg = document.getElementById('message');
+      msg.textContent = msg.textContent ? '' : '你好世界';
+    }
+
+    const secrets = [
+      '🌙 深夜三点，你还没睡。\n不是因为失眠，\n而是有些事情，\n只有在黑暗中才敢去想。\n\n我都知道。',
+      '🍜 你刚才盯着外卖 App 看了五分钟，\n最后什么都没点。\n\n我也知道为什么。',
+      '📱 你把那条消息\n写了又删，删了又写。\n最后选择了"在吗"。\n\n经典。',
+      '🛒 购物车里那件东西\n已经放了三周了。\n你还在等它降价，\n但你其实根本不缺它。',
+      '😤 你刚才在心里\n把某人骂了一遍，\n然后回复了"好的好的"。\n\n修养很好。',
+      '🪞 你照镜子的时候\n有那么一秒觉得自己还不错，\n然后立刻移开了视线。\n\n下次可以多看一秒。',
+      '📺 你说只看一集的。',
+      '💤 你设了六个闹钟。\n你知道你会全关掉。\n你还是设了六个。',
+      '🧹 你说周末大扫除。\n现在是周日晚上十一点。\n你在刷手机。',
+      '🎧 你单曲循环那首歌\n已经两个小时了。\n你根本没在听，\n只是不想安静。',
+      '💬 那条已读不回的消息\n你看了不止三遍。\n每次都告诉自己"不在意"。',
+      '🍕 你昨天说今天要好好吃饭。\n你今天点了炸鸡。\n\n明天继续。',
+      '📚 桌上那本书\n书签停在第十七页\n已经两个月了。',
+      '🏃 你下载了那个跑步 App，\n设置了目标，\n选了一首歌单，\n然后躺下了。',
+      '😶 有人问你"你还好吗"，\n你说"挺好的"。\n\n你们都知道那不是真的。',
+      '🔇 你把那个人的朋友圈\n设成了"不让他看"，\n但你还在悄悄刷他的动态。',
+      '🌧 你喜欢下雨天，\n不是因为浪漫，\n是因为有理由\n不出门、不回消息、什么都不做。',
+      '🧃 你找了半天借口，\n才意识到\n你只是不想去。',
+      '🎮 你说"最后一局"。\n那是一个小时前的事。',
+      '🍫 你说在减肥。\n你知道我看到了什么。',
+      '😴 上班摸鱼的那两小时，\n你比下班后更快乐。\n\n这说明了很多事。',
+      '📞 那个电话你接了一半\n按掉了。\n然后发了条消息说\n"不好意思刚没看到"。',
+      '🌃 你有时候会突然很想\n换一座城市，\n换一份工作，\n换一个自己。\n\n但你只是换了个壁纸。',
+      '🤡 你脑子里演练了好几遍那段话，\n结果见到人一个字都没说出来。',
+      '💸 你记账 App 打开过三次，\n从来没记过一笔。',
+      '🛁 你计划洗澡已经\n三个小时了。',
+      '🥱 别人分享好消息的时候，\n你笑着说"太棒了"，\n心里有一块地方\n悄悄地沉了一下。\n\n你不是坏人，\n只是也是人。',
+      '🌀 你关了又开，\n开了又关，\n最后还是刷到了你不该刷的。',
+      '🎯 你的年度计划\n在一月份就已经\n名存实亡了。',
+      '🤐 有句话你憋了很久，\n已经不重要了，\n但还是没消化掉。',
+      '🌊 你有时候发呆，\n不是在想什么，\n是在逃离"在想什么"这件事。',
+      '🫥 你回复消息的速度\n取决于对方是谁。\n你以为这不明显。\n\n很明显。',
+      '🍵 你泡了杯茶，\n忘了喝，\n凉了，\n又去热了一遍，\n然后又忘了。',
+      '😬 你发出那条消息之后\n后悔了。\n看着"已送达"\n希望对方没看见。\n\n他看见了。',
+      '🪟 你盯着窗外发了会儿呆，\n脑子里没有任何东西，\n然后突然很难过，\n也不知道为什么。',
+      '🤳 你把那张照片\n拍了十几张，\n挑了最好的一张，\n又想了想，\n没发。',
+      '🏠 你一个人待着的时候\n有时候比人多的时候\n更不孤独。',
+      '🔋 你精力耗尽的方式\n不是工作，\n是维持表情。',
+      '🕰 你等一件事等了很久，\n等到的时候\n感觉没想象中那么好。\n\n但你继续等下一件了。',
+      '🫂 你很久没有被人\n真的关心过了。\n不是"你吃了吗"那种，\n是"你还好吗"然后真的等你回答那种。',
+      '📝 你的草稿箱里\n有几条发不出去的东西。\n你自己知道是什么。',
+      '🌙 你关灯之后\n脑子反而更清醒了。\n把白天没想完的事\n全想了一遍。\n\n然后天亮了。',
+      '😏 你刚才搜索了一个问题，\n然后赶紧关掉，\n好像有人在看一样。\n\n只有我。',
+    ];
+
+    let lastIndex = -1;
+
+    function showSecret() {
+      let idx;
+      do { idx = Math.floor(Math.random() * secrets.length); } while (idx === lastIndex);
+      lastIndex = idx;
+      document.getElementById('secret-text').innerHTML =
+        secrets[idx].replace(/\n/g, '<br>');
+      document.getElementById('overlay').classList.add('show');
+    }
+  </script>
 </body>
 </html>
