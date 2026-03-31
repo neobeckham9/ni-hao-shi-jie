@@ -284,12 +284,6 @@
     <div class="form-group mb-0">
       <textarea id="postText" placeholder="说点什么..." rows="3"></textarea>
     </div>
-    <div class="upload-zone mt-12" id="postUploadZone" onclick="document.getElementById('postImageInput').click()">
-      <input type="file" id="postImageInput" accept="image/*" onchange="previewPostImage(event)">
-      <div class="upload-icon">🖼️</div>
-      <div class="upload-hint">点击添加图片（可选）</div>
-      <img id="postImagePreview" class="upload-preview" alt="预览">
-    </div>
     <button class="btn btn-primary mt-12" onclick="submitPost()">发布</button>
   </div>
 
@@ -306,10 +300,8 @@
 <div class="page" id="pageProfile">
   <div class="card">
     <div class="profile-header">
-      <div class="profile-avatar-wrap" onclick="document.getElementById('avatarInput').click()">
+      <div class="profile-avatar-wrap">
         <img id="profileAvatar" class="profile-avatar" src="https://ui-avatars.com/api/?name=U&background=e94560&color=fff" alt="头像">
-        <div class="avatar-overlay">📷</div>
-        <input type="file" id="avatarInput" accept="image/*" class="hidden" onchange="uploadAvatar(event)">
       </div>
       <div>
         <div class="profile-name" id="profileName">—</div>
@@ -372,9 +364,6 @@ import {
   getFirestore, collection, doc, setDoc, getDoc, addDoc, getDocs,
   query, orderBy, where, deleteDoc, serverTimestamp, onSnapshot
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import {
-  getStorage, ref, uploadBytes, getDownloadURL
-} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
 // ──────────────────────────────────────────────
 // 🔥 FIREBASE CONFIG — 替换为你的 Firebase 项目配置
@@ -392,7 +381,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 // ──────────────────────────────────────────────
 // STATE
@@ -561,75 +549,32 @@ window.saveProfile = async () => {
   }
 };
 
-// ──────────────────────────────────────────────
-// AVATAR UPLOAD
-// ──────────────────────────────────────────────
-window.uploadAvatar = async (e) => {
-  if (!currentUser) return;
-  const file = e.target.files[0]; if (!file) return;
-  const avatarEl = document.getElementById('profileAvatar');
-  avatarEl.style.opacity = '.4';
-  try {
-    const storageRef = ref(storage, `avatars/${currentUser.uid}`);
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
-    await setDoc(doc(db, 'users', currentUser.uid), { avatarUrl: url }, { merge: true });
-    await updateProfile(currentUser, { photoURL: url });
-    avatarEl.src = url;
-  } catch (err) {
-    alert('头像上传失败: ' + err.message);
-  } finally {
-    avatarEl.style.opacity = '1';
-    e.target.value = '';
-  }
-};
 
 // ──────────────────────────────────────────────
 // POSTS — CREATE
 // ──────────────────────────────────────────────
-window.previewPostImage = (e) => {
-  const file = e.target.files[0]; if (!file) return;
-  const preview = document.getElementById('postImagePreview');
-  preview.src = URL.createObjectURL(file);
-  preview.style.display = 'block';
-  document.querySelector('#postUploadZone .upload-icon').style.display = 'none';
-  document.querySelector('#postUploadZone .upload-hint').style.display = 'none';
-};
-
 window.submitPost = async () => {
   if (!currentUser) { showPage('auth'); return; }
   const text = document.getElementById('postText').value.trim();
-  const imageFile = document.getElementById('postImageInput').files[0];
-  if (!text && !imageFile) { alert('请写点什么或添加图片'); return; }
+  if (!text) { alert('请写点什么'); return; }
 
   const btn = document.querySelector('#composerCard .btn-primary');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 发布中';
 
   try {
-    let imageUrl = '';
-    if (imageFile) {
-      const storageRef = ref(storage, `posts/${currentUser.uid}/${Date.now()}`);
-      await uploadBytes(storageRef, imageFile);
-      imageUrl = await getDownloadURL(storageRef);
-    }
-
     const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
     const userData = userSnap.exists() ? userSnap.data() : {};
 
     await addDoc(collection(db, 'posts'), {
       uid: currentUser.uid,
       authorName: userData.name || currentUser.displayName || '匿名',
-      authorAvatar: userData.avatarUrl || currentUser.photoURL || '',
-      text, imageUrl,
+      authorAvatar: '',
+      text,
+      imageUrl: '',
       createdAt: serverTimestamp()
     });
 
     document.getElementById('postText').value = '';
-    document.getElementById('postImageInput').value = '';
-    const preview = document.getElementById('postImagePreview');
-    preview.style.display = 'none'; preview.src = '';
-    document.querySelector('#postUploadZone .upload-icon').style.display = '';
-    document.querySelector('#postUploadZone .upload-hint').style.display = '';
   } catch (err) {
     alert('发布失败: ' + err.message);
   } finally {
