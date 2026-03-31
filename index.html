@@ -35,10 +35,68 @@
       font-size: 24px;
       color: #333;
     }
+
+    .secret-btn {
+      margin-top: 16px;
+      background: #2d1b69;
+    }
+
+    .secret-btn:hover {
+      background: #1a0f3e;
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    .dialog {
+      background: #1a0f3e;
+      color: #d4b8ff;
+      border: 1px solid #6b3fa0;
+      border-radius: 12px;
+      padding: 36px 40px;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(107, 63, 160, 0.6);
+    }
+
+    .dialog p {
+      font-size: 17px;
+      line-height: 1.8;
+      margin: 0 0 24px;
+    }
+
+    .dialog .close-btn {
+      background: #6b3fa0;
+      font-size: 14px;
+      padding: 8px 20px;
+    }
+
+    .dialog .close-btn:hover {
+      background: #8a52c8;
+    }
   </style>
 </head>
 <body>
   <button onclick="document.getElementById('message').textContent = '你好世界'">点击我</button>
   <p id="message"></p>
+  <button class="secret-btn" onclick="document.getElementById('overlay').classList.add('show')">点击我，我知道你的秘密</button>
+
+  <div id="overlay" class="overlay" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="dialog">
+      <p>🌙 深夜三点，你还没睡。<br>不是因为失眠，<br>而是有些事情，<br>只有在黑暗中才敢去想。<br><br>我都知道。</p>
+      <button class="close-btn" onclick="document.getElementById('overlay').classList.remove('show')">关上这扇门</button>
+    </div>
+  </div>
 </body>
 </html>
