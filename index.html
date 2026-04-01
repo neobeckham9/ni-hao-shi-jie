@@ -327,22 +327,6 @@
     <button class="mystery-toggle" id="mysteryToggle" onclick="toggleMystery()">打开</button>
   </div>
 
-  <!-- Post composer (only when logged in) -->
-  <div class="card hidden" id="composerCard">
-    <h3 style="margin-bottom:16px;">✍️ 分享此刻</h3>
-    <div class="form-group mb-0">
-      <textarea id="postText" placeholder="说点什么..." rows="3"></textarea>
-    </div>
-    <button class="btn btn-primary mt-12" onclick="submitPost()">发布</button>
-  </div>
-
-  <!-- Feed -->
-  <div id="feedContainer">
-    <div class="text-center text-sm" style="padding:40px 0;">
-      <div class="spinner"></div>
-      <p style="margin-top:12px;">加载中...</p>
-    </div>
-  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════ PROFILE PAGE -->
@@ -393,13 +377,6 @@
     </div>
   </div>
 
-  <!-- My posts -->
-  <div class="card">
-    <h3 style="margin-bottom:16px;">📷 我的内容</h3>
-    <div id="myPostsContainer">
-      <div class="text-sm text-center" style="padding:12px 0;">还没有发布内容</div>
-    </div>
-  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════ FIREBASE + APP JS -->
@@ -448,15 +425,12 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById('navProfile').classList.remove('hidden');
     document.getElementById('navLogout').classList.remove('hidden');
     document.getElementById('navLogin').classList.add('hidden');
-    document.getElementById('composerCard').classList.remove('hidden');
     await loadUserProfile(user.uid);
   } else {
     document.getElementById('navProfile').classList.add('hidden');
     document.getElementById('navLogout').classList.add('hidden');
     document.getElementById('navLogin').classList.remove('hidden');
-    document.getElementById('composerCard').classList.add('hidden');
   }
-  loadFeed();
   loadMysteries();
 });
 
@@ -469,7 +443,6 @@ window.showPage = (name) => {
   document.getElementById(map[name])?.classList.add('active');
   if (name === 'profile' && currentUser) {
     loadUserProfile(currentUser.uid);
-    loadMyPosts(currentUser.uid);
     loadMyMysteries(currentUser.uid);
   }
 };
@@ -600,114 +573,11 @@ window.saveProfile = async () => {
 };
 
 
-// ──────────────────────────────────────────────
-// POSTS — CREATE
-// ──────────────────────────────────────────────
-window.submitPost = async () => {
-  if (!currentUser) { showPage('auth'); return; }
-  const text = document.getElementById('postText').value.trim();
-  if (!text) { alert('请写点什么'); return; }
-
-  const btn = document.querySelector('#composerCard .btn-primary');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 发布中';
-
-  try {
-    const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
-    const userData = userSnap.exists() ? userSnap.data() : {};
-
-    await addDoc(collection(db, 'posts'), {
-      uid: currentUser.uid,
-      authorName: userData.name || currentUser.displayName || '匿名',
-      authorAvatar: '',
-      text,
-      imageUrl: '',
-      createdAt: serverTimestamp()
-    });
-
-    document.getElementById('postText').value = '';
-  } catch (err) {
-    alert('发布失败: ' + err.message);
-  } finally {
-    btn.disabled = false; btn.textContent = '发布';
-  }
-};
 
 // ──────────────────────────────────────────────
-// POSTS — FEED (real-time)
+// PRESET MYSTERIES（始终保留在随机池）
 // ──────────────────────────────────────────────
-function loadFeed() {
-  const container = document.getElementById('feedContainer');
-  const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
-  onSnapshot(q, (snapshot) => {
-    if (snapshot.empty) {
-      container.innerHTML = '<div class="text-center text-sm" style="padding:40px 0;">还没有内容，快来第一个发布吧 ✨</div>';
-      return;
-    }
-    container.innerHTML = snapshot.docs.map(d => renderPost(d.id, d.data())).join('');
-  }, (err) => {
-    container.innerHTML = '<div class="text-center text-sm" style="padding:40px 0;">加载失败，请刷新重试</div>';
-    console.error(err);
-  });
-}
-
-function renderPost(id, data) {
-  const avatar = data.authorAvatar
-    ? `<img class="post-avatar" src="${esc(data.authorAvatar)}" alt="头像">`
-    : `<img class="post-avatar" src="https://ui-avatars.com/api/?name=${encodeURIComponent(data.authorName||'U')}&background=e94560&color=fff" alt="头像">`;
-  const timeStr = data.createdAt ? timeAgo(data.createdAt.toDate()) : '';
-  const img = data.imageUrl ? `<img class="post-image" src="${esc(data.imageUrl)}" alt="图片">` : '';
-  const textHtml = data.text ? `<div class="post-content">${esc(data.text)}</div>` : '';
-  const deleteBtn = (currentUser && currentUser.uid === data.uid)
-    ? `<button class="btn btn-secondary btn-sm" onclick="deletePost('${id}')" style="margin-left:auto;color:var(--accent);">删除</button>` : '';
-  return `
-    <div class="post-card" id="post-${id}">
-      <div class="post-header">
-        ${avatar}
-        <div>
-          <div class="post-author">${esc(data.authorName || '匿名')}</div>
-          <div class="post-time">${timeStr}</div>
-        </div>
-        ${deleteBtn}
-      </div>
-      ${img}
-      ${textHtml}
-    </div>`;
-}
-
-window.deletePost = async (id) => {
-  if (!currentUser) return;
-  if (!confirm('确定删除这条内容？')) return;
-  await deleteDoc(doc(db, 'posts', id));
-};
-
-// ──────────────────────────────────────────────
-// MY POSTS (profile page)
-// ──────────────────────────────────────────────
-async function loadMyPosts(uid) {
-  const container = document.getElementById('myPostsContainer');
-  const q = query(collection(db, 'posts'), where('uid','==',uid), orderBy('createdAt','desc'));
-  try {
-    const snap = await getDocs(q);
-    if (snap.empty) {
-      container.innerHTML = '<div class="text-sm text-center" style="padding:12px 0;">还没有发布内容</div>';
-      return;
-    }
-    container.innerHTML = snap.docs.map(d => renderPost(d.id, d.data())).join('');
-  } catch (err) {
-    container.innerHTML = '<div class="text-sm text-center" style="padding:12px 0;">加载失败</div>';
-  }
-}
-
-// ──────────────────────────────────────────────
-// MYSTERIES — GLOBAL POOL (real-time)
-// ──────────────────────────────────────────────
-function loadMysteries() {
-  if (unsubscribeMysteries) unsubscribeMysteries();
-  const q = query(collection(db, 'mysteries'), orderBy('createdAt', 'desc'));
-  unsubscribeMysteries = onSnapshot(q, (snap) => {
-    allMysteries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    if (allMysteries.length === 0) {
-      allMysteries = [
+const PRESET_MYSTERIES = [
         { text: '🌙 深夜三点，你还没睡。\n不是因为失眠，\n而是有些事情，\n只有在黑暗中才敢去想。\n\n我都知道。' },
         { text: '🍜 你刚才盯着外卖 App 看了五分钟，\n最后什么都没点。\n\n我也知道为什么。' },
         { text: '📱 你把那条消息\n写了又删，删了又写。\n最后选择了"在吗"。\n\n经典。' },
@@ -751,8 +621,17 @@ function loadMysteries() {
         { text: '📝 你的草稿箱里\n有几条发不出去的东西。\n你自己知道是什么。' },
         { text: '🌙 你关灯之后\n脑子反而更清醒了。\n把白天没想完的事\n全想了一遍。\n\n然后天亮了。' },
         { text: '😏 你刚才搜索了一个问题，\n然后赶紧关掉，\n好像有人在看一样。\n\n只有我。' },
-      ];
-    }
+];
+
+// ──────────────────────────────────────────────
+// MYSTERIES — GLOBAL POOL (real-time)
+// ──────────────────────────────────────────────
+function loadMysteries() {
+  if (unsubscribeMysteries) unsubscribeMysteries();
+  const q = query(collection(db, 'mysteries'), orderBy('createdAt', 'desc'));
+  unsubscribeMysteries = onSnapshot(q, (snap) => {
+    const userMysteries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    allMysteries = [...PRESET_MYSTERIES, ...userMysteries];
     if (currentMysteryIndex === -1) showRandomMystery();
   });
 }
@@ -808,14 +687,20 @@ window.addMystery = async () => {
 // ──────────────────────────────────────────────
 async function loadMyMysteries(uid) {
   const container = document.getElementById('mysteryList');
-  const q = query(collection(db, 'mysteries'), where('uid','==',uid), orderBy('createdAt','desc'));
+  // 只用 where，不加 orderBy，避免复合索引要求；客户端按时间排序
+  const q = query(collection(db, 'mysteries'), where('uid','==',uid));
   try {
     const snap = await getDocs(q);
     if (snap.empty) {
       container.innerHTML = '<div class="text-sm text-center" style="padding:12px 0;">暂无文案，快来添加吧</div>';
       return;
     }
-    container.innerHTML = snap.docs.map(d => {
+    const docs = snap.docs.sort((a, b) => {
+      const ta = a.data().createdAt?.toMillis?.() ?? 0;
+      const tb = b.data().createdAt?.toMillis?.() ?? 0;
+      return tb - ta;
+    });
+    container.innerHTML = docs.map(d => {
       const data = d.data();
       return `
         <div class="mystery-item" id="mystery-${d.id}">
@@ -826,6 +711,7 @@ async function loadMyMysteries(uid) {
           </div>
         </div>`;
     }).join('');
+
   } catch (err) {
     container.innerHTML = '<div class="text-sm text-center">加载失败</div>';
   }
