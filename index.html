@@ -177,6 +177,35 @@
     .mystery-toggle:hover { background: var(--accent); color: #fff; }
     .mystery-toggle:active { opacity: 0.7; transform: scale(.97); }
 
+    /* ─── AUTHOR CARD ─────────────────────── */
+    .author-reveal {
+      overflow: hidden; max-height: 0; opacity: 0;
+      transition: max-height .4s ease, opacity .3s ease, margin .3s ease;
+      margin-top: 0;
+    }
+    .author-reveal.open { max-height: 200px; opacity: 1; margin-top: 20px; }
+    .author-card {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 12px; padding: 14px 16px;
+    }
+    .author-avatar {
+      width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
+      border: 2px solid var(--accent); flex-shrink: 0;
+    }
+    .author-info { flex: 1; text-align: left; }
+    .author-name { font-weight: 700; font-size: 15px; }
+    .author-bio { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .btn-follow {
+      cursor: pointer; background: var(--accent); border: none;
+      color: #fff; border-radius: 20px; padding: 8px 18px;
+      font-size: 13px; font-weight: 600; font-family: inherit;
+      min-height: 36px; flex-shrink: 0; transition: opacity .2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-follow:active { opacity: .7; }
+    .btn-follow.followed { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+
     /* ─── POST CARD ───────────────────────── */
     .post-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; }
     .post-header { display: flex; align-items: center; gap: 12px; padding: 16px; }
@@ -325,6 +354,17 @@
     <div class="mystery-label">我知道你的秘密</div>
     <div class="mystery-text" id="mysteryDisplay"></div>
     <button class="mystery-toggle" id="mysteryToggle" onclick="toggleMystery()">打开</button>
+    <button class="mystery-toggle" id="authorToggle" onclick="toggleAuthor()" style="margin-top:10px;display:none;">查看是谁写的</button>
+    <div class="author-reveal" id="authorReveal">
+      <div class="author-card" id="authorCard">
+        <img class="author-avatar" id="authorAvatar" src="" alt="头像">
+        <div class="author-info">
+          <div class="author-name" id="authorName"></div>
+          <div class="author-bio" id="authorBioText"></div>
+        </div>
+        <button class="btn-follow" id="followBtn" onclick="toggleFollow()"></button>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -415,6 +455,8 @@ let currentUser = null;
 let allMysteries = [];
 let currentMysteryIndex = -1;
 let unsubscribeMysteries = null;
+let currentMysteryUid = null;  // uid of currently shown mystery's author
+let authorRevealed = false;
 
 // ──────────────────────────────────────────────
 // AUTH STATE
@@ -644,7 +686,16 @@ function showRandomMystery() {
   do { idx = Math.floor(Math.random() * allMysteries.length); }
   while (allMysteries.length > 1 && idx === currentMysteryIndex);
   currentMysteryIndex = idx;
-  document.getElementById('mysteryDisplay').textContent = allMysteries[idx].text;
+  const m = allMysteries[idx];
+  document.getElementById('mysteryDisplay').textContent = m.text;
+  currentMysteryUid = m.uid || null;
+
+  // 重置作者区
+  authorRevealed = false;
+  document.getElementById('authorReveal').classList.remove('open');
+  const authorBtn = document.getElementById('authorToggle');
+  authorBtn.style.display = currentMysteryUid ? 'inline-block' : 'none';
+  authorBtn.textContent = '查看是谁写的';
 }
 
 window.toggleMystery = function() {
@@ -654,11 +705,88 @@ window.toggleMystery = function() {
     el.classList.remove('open');
     btn.textContent = '打开';
     mysteryOpen = false;
+    document.getElementById('authorToggle').style.display = 'none';
+    document.getElementById('authorReveal').classList.remove('open');
+    authorRevealed = false;
   } else {
     showRandomMystery();
     el.classList.add('open');
     btn.textContent = '关闭';
     mysteryOpen = true;
+  }
+};
+
+window.toggleAuthor = async function() {
+  if (authorRevealed) {
+    document.getElementById('authorReveal').classList.remove('open');
+    document.getElementById('authorToggle').textContent = '查看是谁写的';
+    authorRevealed = false;
+    return;
+  }
+  if (!currentMysteryUid) return;
+  const btn = document.getElementById('authorToggle');
+  btn.textContent = '加载中...';
+  try {
+    const snap = await getDoc(doc(db, 'users', currentMysteryUid));
+    const data = snap.exists() ? snap.data() : {};
+    const name = data.name || '神秘用户';
+    const bio = data.bio || '此人神秘，无简介';
+    const avatarUrl = data.avatarUrl ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=e94560&color=fff`;
+
+    document.getElementById('authorName').textContent = name;
+    document.getElementById('authorBioText').textContent = bio;
+    document.getElementById('authorAvatar').src = avatarUrl;
+
+    // 设置关注按钮状态
+    const followBtn = document.getElementById('followBtn');
+    if (!currentUser) {
+      followBtn.textContent = '登录后关注';
+      followBtn.className = 'btn-follow followed';
+    } else if (currentMysteryUid === currentUser.uid) {
+      followBtn.textContent = '这是你自己';
+      followBtn.className = 'btn-follow followed';
+    } else {
+      const followSnap = await getDoc(doc(db, 'follows', `${currentUser.uid}_${currentMysteryUid}`));
+      followBtn.textContent = followSnap.exists() ? '已关注 ✓' : '+ 加为好友';
+      followBtn.className = followSnap.exists() ? 'btn-follow followed' : 'btn-follow';
+    }
+
+    document.getElementById('authorReveal').classList.add('open');
+    btn.textContent = '收起';
+    authorRevealed = true;
+  } catch (err) {
+    btn.textContent = '查看是谁写的';
+    alert('加载失败: ' + err.message);
+  }
+};
+
+window.toggleFollow = async function() {
+  if (!currentUser) { showPage('auth'); return; }
+  if (!currentMysteryUid || currentMysteryUid === currentUser.uid) return;
+  const followId = `${currentUser.uid}_${currentMysteryUid}`;
+  const followRef = doc(db, 'follows', followId);
+  const btn = document.getElementById('followBtn');
+  btn.disabled = true;
+  try {
+    const snap = await getDoc(followRef);
+    if (snap.exists()) {
+      await deleteDoc(followRef);
+      btn.textContent = '+ 加为好友';
+      btn.className = 'btn-follow';
+    } else {
+      await setDoc(followRef, {
+        from: currentUser.uid,
+        to: currentMysteryUid,
+        createdAt: serverTimestamp()
+      });
+      btn.textContent = '已关注 ✓';
+      btn.className = 'btn-follow followed';
+    }
+  } catch (err) {
+    alert('操作失败: ' + err.message);
+  } finally {
+    btn.disabled = false;
   }
 };
 
@@ -672,6 +800,7 @@ window.addMystery = async () => {
   try {
     await addDoc(collection(db, 'mysteries'), {
       uid: currentUser.uid,
+      authorName: currentUser.displayName || '神秘用户',
       text,
       createdAt: serverTimestamp()
     });
