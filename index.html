@@ -535,6 +535,7 @@ let unsubscribeMysteries = null;
 let currentMysteryUid = null;  // uid of currently shown mystery's author
 let authorRevealed = false;
 let unsubscribeNotifs = null;
+let _suppressedNotifCount = 0; // count user has already "seen"
 let unsubscribeChat = null;
 let currentChatId = null;
 let currentFriendsTab = 0;
@@ -989,8 +990,9 @@ function setupNotifListener(uid) {
   unsubscribeNotifs = onSnapshot(q, (snap) => {
     const count = snap.size;
     const badge = document.getElementById('notifBadge');
-    if (count > 0) {
-      badge.textContent = count > 99 ? '99+' : String(count);
+    const unseen = count - _suppressedNotifCount;
+    if (unseen > 0) {
+      badge.textContent = unseen > 99 ? '99+' : String(unseen);
       badge.classList.remove('hidden');
     } else {
       badge.classList.add('hidden');
@@ -1035,7 +1037,8 @@ window.toggleNotifDropdown = async function() {
         <span style="color:var(--text2);font-size:11px;margin-left:6px;">${timeStr}</span>
       </div>`;
     }).join('');
-    // Clear badge immediately when user opens the dropdown
+    // Suppress badge: mark current count as "seen"
+    _suppressedNotifCount = snap.size;
     const badge = document.getElementById('notifBadge');
     badge.classList.add('hidden');
     // Mark as read in background (non-fatal)
