@@ -1035,6 +1035,9 @@ window.toggleNotifDropdown = async function() {
         <span style="color:var(--text2);font-size:11px;margin-left:6px;">${timeStr}</span>
       </div>`;
     }).join('');
+    // Clear badge immediately when user opens the dropdown
+    const badge = document.getElementById('notifBadge');
+    badge.classList.add('hidden');
     // Mark as read in background (non-fatal)
     try {
       const unreadDocs = snap.docs.filter(d => !d.data().read);
