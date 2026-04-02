@@ -1088,13 +1088,14 @@ async function loadFriends() {
 function renderFriendsTab() {
   const listEl = document.getElementById('friendsList');
   const { following, followers, profiles } = _friendsData;
+  const followingSet = new Set(following);
   let uids = [];
   let showDM = false;
+  let showFollowBack = false;
   if (currentFriendsTab === 0) { uids = following; }
-  else if (currentFriendsTab === 1) { uids = followers; }
+  else if (currentFriendsTab === 1) { uids = followers; showFollowBack = true; }
   else {
     // Mutual follows
-    const followingSet = new Set(following);
     uids = followers.filter(uid => followingSet.has(uid));
     showDM = true;
   }
@@ -1107,19 +1108,55 @@ function renderFriendsTab() {
     const name = p.name || '神秘用户';
     const bio = p.bio || '暂无简介';
     const avatar = p.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=e94560&color=fff`;
-    const dmBtn = showDM
-      ? `<button class="btn btn-primary btn-sm" style="width:auto;flex-shrink:0;" onclick="openChat('${uid}')">发私信</button>`
-      : '';
+    let actionBtn = '';
+    if (showDM) {
+      actionBtn = `<button class="btn btn-primary btn-sm" style="width:auto;flex-shrink:0;" onclick="openChat('${uid}')">发私信</button>`;
+    } else if (showFollowBack) {
+      if (followingSet.has(uid)) {
+        actionBtn = `<button class="btn btn-sm" style="width:auto;flex-shrink:0;background:#2a2a3a;color:#aaa;border:1px solid #444;border-radius:8px;padding:6px 12px;cursor:default;" disabled>已互关 ✓</button>`;
+      } else {
+        actionBtn = `<button id="followback-${uid}" class="btn btn-primary btn-sm" style="width:auto;flex-shrink:0;" onclick="followBack('${uid}')">回关</button>`;
+      }
+    }
     return `<div class="friend-item">
       <img class="friend-avatar" src="${esc(avatar)}" alt="头像" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=e94560&color=fff'">
       <div class="friend-info">
         <div class="friend-name">${esc(name)}</div>
         <div class="friend-bio">${esc(bio)}</div>
       </div>
-      ${dmBtn}
+      ${actionBtn}
     </div>`;
   }).join('');
 }
+
+window.followBack = async function(targetUid) {
+  if (!currentUser) return;
+  const btn = document.getElementById(`followback-${targetUid}`);
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  const followId = `${currentUser.uid}_${targetUid}`;
+  try {
+    await setDoc(doc(db, 'follows', followId), {
+      from: currentUser.uid,
+      to: targetUid,
+      createdAt: serverTimestamp()
+    });
+    try {
+      await addDoc(collection(db, 'notifications', targetUid, 'items'), {
+        from: currentUser.uid,
+        fromName: currentUser.displayName || '神秘用户',
+        type: 'follow',
+        createdAt: serverTimestamp(),
+        read: false
+      });
+    } catch (_) {}
+    // Update local data and re-render
+    _friendsData.following.push(targetUid);
+    renderFriendsTab();
+  } catch (err) {
+    alert('回关失败: ' + err.message);
+    if (btn) { btn.disabled = false; btn.textContent = '回关'; }
+  }
+};
 
 // ──────────────────────────────────────────────
 // FEATURE 3: DM CHAT
