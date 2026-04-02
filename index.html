@@ -341,28 +341,29 @@
 <nav>
   <span class="nav-logo">✦ 神秘空间</span>
   <div class="nav-links" id="navLinks">
-    <button class="nav-btn" onclick="showPage('home')">首页</button>
-    <button class="nav-btn hidden" id="navProfile" onclick="showPage('profile')">我的</button>
+    <button class="nav-btn" id="navLangBtn" onclick="toggleLang()" style="font-size:12px;padding:6px 10px;opacity:0.7;">中文 / EN</button>
+    <button class="nav-btn" id="navHome" onclick="showPage('home')" data-i18n="nav_home">首页</button>
+    <button class="nav-btn hidden" id="navProfile" onclick="showPage('profile')" data-i18n="nav_profile">我的</button>
     <div class="nav-bell-wrap hidden" id="navBellWrap" style="position:relative;display:inline-flex;align-items:center;">
       <button class="nav-btn" id="navBell" onclick="toggleNotifDropdown()" style="padding:8px 12px;font-size:18px;line-height:1;">🔔</button>
       <span id="notifBadge" class="hidden" style="position:absolute;top:2px;right:2px;background:var(--accent);color:#fff;border-radius:50%;font-size:11px;font-weight:700;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;pointer-events:none;padding:0 3px;"></span>
       <div id="notifDropdown" class="hidden" style="position:absolute;top:calc(100% + 8px);right:0;width:280px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:999;max-height:360px;overflow-y:auto;">
-        <div style="padding:12px 16px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);">通知</div>
+        <div id="notifTitle" style="padding:12px 16px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);" data-i18n="notif_title">通知</div>
         <div id="notifList" style="padding:8px 0;"></div>
       </div>
     </div>
-    <button class="nav-btn hidden" id="navLogout" onclick="logout()">退出</button>
-    <button class="nav-btn" id="navLogin" onclick="showPage('auth')">登录</button>
+    <button class="nav-btn hidden" id="navLogout" onclick="logout()" data-i18n="nav_logout">退出</button>
+    <button class="nav-btn" id="navLogin" onclick="showPage('auth')" data-i18n="nav_login">登录</button>
   </div>
 </nav>
 
 <!-- ═══════════════════════════════════════════ AUTH PAGE -->
 <div class="page" id="pageAuth">
   <div class="card" style="max-width:400px;margin:0 auto;">
-    <h2 style="text-align:center;margin-bottom:20px;">欢迎回来</h2>
+    <h2 id="authWelcome" style="text-align:center;margin-bottom:20px;" data-i18n="auth_welcome">欢迎回来</h2>
     <div class="auth-tabs">
-      <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">登录</button>
-      <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">注册</button>
+      <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')" data-i18n="auth_login">登录</button>
+      <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')" data-i18n="auth_register">注册</button>
     </div>
     <div id="authError" class="alert alert-error hidden"></div>
     <div id="authSuccess" class="alert alert-success hidden"></div>
@@ -370,31 +371,31 @@
     <!-- Login Form -->
     <form id="loginForm" onsubmit="handleLogin(event)">
       <div class="form-group">
-        <label>邮箱</label>
+        <label data-i18n="auth_email">邮箱</label>
         <input type="email" id="loginEmail" placeholder="your@email.com" required>
       </div>
       <div class="form-group">
-        <label>密码</label>
+        <label data-i18n="auth_password">密码</label>
         <input type="password" id="loginPassword" placeholder="••••••••" required>
       </div>
-      <button class="btn btn-primary" type="submit" id="loginBtn">登录</button>
+      <button class="btn btn-primary" type="submit" id="loginBtn" data-i18n="auth_login">登录</button>
     </form>
 
     <!-- Register Form -->
     <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
       <div class="form-group">
-        <label>昵称</label>
-        <input type="text" id="regName" placeholder="起个有趣的名字" required>
+        <label data-i18n="auth_nickname">昵称</label>
+        <input type="text" id="regName" data-i18n-ph="auth_nickname_ph" placeholder="起个有趣的名字" required>
       </div>
       <div class="form-group">
-        <label>邮箱</label>
+        <label data-i18n="auth_email">邮箱</label>
         <input type="email" id="regEmail" placeholder="your@email.com" required>
       </div>
       <div class="form-group">
-        <label>密码（至少6位）</label>
+        <label data-i18n="auth_password_hint">密码（至少6位）</label>
         <input type="password" id="regPassword" placeholder="••••••••" required minlength="6">
       </div>
-      <button class="btn btn-primary" type="submit" id="registerBtn">创建账号</button>
+      <button class="btn btn-primary" type="submit" id="registerBtn" data-i18n="auth_create">创建账号</button>
     </form>
   </div>
 </div>
@@ -403,10 +404,10 @@
 <div class="page active" id="pageHome">
   <!-- Mystery banner -->
   <div class="mystery-banner">
-    <div class="mystery-label">我知道你的秘密</div>
+    <div class="mystery-label" id="mysteryLabel" data-i18n="mystery_label">我知道你的秘密</div>
     <div class="mystery-text" id="mysteryDisplay"></div>
-    <button class="mystery-toggle" id="mysteryToggle" onclick="toggleMystery()">打开</button>
-    <button class="mystery-toggle" id="authorToggle" onclick="toggleAuthor()" style="margin-top:10px;display:none;">查看是谁写的</button>
+    <button class="mystery-toggle" id="mysteryToggle" onclick="toggleMystery()" data-i18n="mystery_open">打开</button>
+    <button class="mystery-toggle" id="authorToggle" onclick="toggleAuthor()" style="margin-top:10px;display:none;" data-i18n="mystery_see_author">查看是谁写的</button>
     <div class="author-reveal" id="authorReveal">
       <div class="author-card" id="authorCard">
         <img class="author-avatar" id="authorAvatar" src="" alt="头像">
@@ -433,49 +434,49 @@
         <div class="profile-bio" id="profileBio">还没有简介</div>
       </div>
     </div>
-    <button class="btn btn-secondary" onclick="showEditProfile()">✏️ 编辑资料</button>
+    <button class="btn btn-secondary" id="editProfileBtn" onclick="showEditProfile()" data-i18n="profile_edit_btn">✏️ 编辑资料</button>
   </div>
 
   <!-- Edit profile form -->
   <div class="card hidden" id="editProfileCard">
-    <h3 style="margin-bottom:16px;">编辑资料</h3>
+    <h3 id="editProfileTitle" style="margin-bottom:16px;" data-i18n="profile_edit_title">编辑资料</h3>
     <div id="profileError" class="alert alert-error hidden"></div>
     <div class="form-group">
-      <label>昵称</label>
-      <input type="text" id="editName" placeholder="你的名字">
+      <label data-i18n="profile_nickname">昵称</label>
+      <input type="text" id="editName" data-i18n-ph="profile_name_ph" placeholder="你的名字">
     </div>
     <div class="form-group">
-      <label>个人简介</label>
-      <textarea id="editBio" placeholder="介绍一下自己..."></textarea>
+      <label data-i18n="profile_bio_label">个人简介</label>
+      <textarea id="editBio" data-i18n-ph="profile_bio_ph" placeholder="介绍一下自己..."></textarea>
     </div>
     <div style="display:flex;gap:10px;">
-      <button class="btn btn-primary" onclick="saveProfile()">保存</button>
-      <button class="btn btn-secondary" onclick="hideEditProfile()">取消</button>
+      <button class="btn btn-primary" id="saveProfileBtn" onclick="saveProfile()" data-i18n="profile_save">保存</button>
+      <button class="btn btn-secondary" id="cancelProfileBtn" onclick="hideEditProfile()" data-i18n="profile_cancel">取消</button>
     </div>
   </div>
 
   <!-- Mystery copy manager -->
   <div class="card">
-    <h3 style="margin-bottom:4px;">🔮 我的神秘文案库</h3>
-    <p class="text-sm" style="margin-bottom:16px;">这些文案会随机出现在首页 · 你越写越多，随机池越神秘</p>
+    <h3 id="vaultTitle" style="margin-bottom:4px;" data-i18n="vault_title">🔮 我的神秘文案库</h3>
+    <p id="vaultDesc" class="text-sm" style="margin-bottom:16px;" data-i18n="vault_desc">这些文案会随机出现在首页 · 你越写越多，随机池越神秘</p>
 
     <div class="form-group">
-      <textarea id="newMystery" placeholder="写下你的神秘文案..." rows="2"></textarea>
+      <textarea id="newMystery" data-i18n-ph="vault_placeholder" placeholder="写下你的神秘文案..." rows="2"></textarea>
     </div>
-    <button class="btn btn-primary" onclick="addMystery()">+ 加入文案库</button>
+    <button class="btn btn-primary" id="addMysteryBtn" onclick="addMystery()" data-i18n="vault_add">+ 加入文案库</button>
 
     <div id="mysteryList" style="margin-top:20px;">
-      <div class="text-sm text-center" style="padding:12px 0;">暂无文案，快来添加吧</div>
+      <div class="text-sm text-center" style="padding:12px 0;" data-i18n="vault_empty">暂无文案，快来添加吧</div>
     </div>
   </div>
 
   <!-- Friends list -->
   <div class="card" id="friendsCard">
-    <h3 style="margin-bottom:16px;">👥 我的好友</h3>
+    <h3 id="friendsTitle" style="margin-bottom:16px;" data-i18n="friends_title">👥 我的好友</h3>
     <div style="display:flex;gap:0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);margin-bottom:16px;">
-      <button class="auth-tab active" id="friendsTab0" onclick="switchFriendsTab(0)">我关注的</button>
-      <button class="auth-tab" id="friendsTab1" onclick="switchFriendsTab(1)">关注我的</button>
-      <button class="auth-tab" id="friendsTab2" onclick="switchFriendsTab(2)">好友（互关）</button>
+      <button class="auth-tab active" id="friendsTab0" onclick="switchFriendsTab(0)" data-i18n="friends_following_tab">我关注的</button>
+      <button class="auth-tab" id="friendsTab1" onclick="switchFriendsTab(1)" data-i18n="friends_followers_tab">关注我的</button>
+      <button class="auth-tab" id="friendsTab2" onclick="switchFriendsTab(2)" data-i18n="friends_mutual_tab">好友（互关）</button>
     </div>
     <div id="friendsList" style="min-height:60px;"></div>
   </div>
@@ -485,13 +486,13 @@
 <!-- ═══════════════════════════════════════════ CHAT PAGE -->
 <div class="page" id="pageChat">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-    <button class="btn btn-secondary btn-sm" style="width:auto;" onclick="showPage('profile')">← 返回</button>
+    <button class="btn btn-secondary btn-sm" id="chatBackBtn" style="width:auto;" onclick="showPage('profile')" data-i18n="chat_back">← 返回</button>
     <h3 id="chatTitle" style="flex:1;font-size:16px;"></h3>
   </div>
   <div id="chatMessages" style="min-height:300px;max-height:55vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 0;margin-bottom:16px;"></div>
   <div style="display:flex;gap:10px;">
-    <input type="text" id="chatInput" placeholder="说点什么..." style="flex:1;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:16px;font-family:inherit;outline:none;-webkit-appearance:none;appearance:none;" onkeydown="if(event.key==='Enter')sendMessage()">
-    <button class="btn btn-primary btn-sm" style="width:auto;min-height:44px;padding:0 20px;" onclick="sendMessage()">发送</button>
+    <input type="text" id="chatInput" data-i18n-ph="chat_placeholder" placeholder="说点什么..." style="flex:1;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:16px;font-family:inherit;outline:none;-webkit-appearance:none;appearance:none;" onkeydown="if(event.key==='Enter')sendMessage()">
+    <button class="btn btn-primary btn-sm" id="chatSendBtn" style="width:auto;min-height:44px;padding:0 20px;" onclick="sendMessage()" data-i18n="chat_send">发送</button>
   </div>
 </div>
 
@@ -524,6 +525,86 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// ──────────────────────────────────────────────
+// i18n — LANGUAGE SYSTEM
+// ──────────────────────────────────────────────
+const TRANSLATIONS = {
+  zh: {
+    nav_home: '首页', nav_profile: '我的', nav_logout: '退出', nav_login: '登录',
+    notif_title: '通知', notif_followed: '关注了你', notif_empty: '暂无通知',
+    notif_loading: '加载中...', notif_failed: '加载失败',
+    auth_welcome: '欢迎回来', auth_login: '登录', auth_register: '注册',
+    auth_email: '邮箱', auth_password: '密码', auth_password_hint: '密码（至少6位）',
+    auth_nickname: '昵称', auth_nickname_ph: '起个有趣的名字', auth_create: '创建账号',
+    mystery_label: '我知道你的秘密', mystery_open: '打开', mystery_close: '关闭',
+    mystery_collapse: '收起', mystery_see_author: '查看是谁写的',
+    mystery_following: '已关注 ✓', mystery_follow: '+ 加为好友',
+    mystery_login_follow: '登录后关注', mystery_self: '这是你自己',
+    profile_edit_btn: '✏️ 编辑资料', profile_edit_title: '编辑资料',
+    profile_nickname: '昵称', profile_name_ph: '你的名字',
+    profile_bio_label: '个人简介', profile_bio_ph: '介绍一下自己...',
+    profile_save: '保存', profile_cancel: '取消', profile_no_bio: '还没有简介',
+    vault_title: '🔮 我的神秘文案库',
+    vault_desc: '这些文案会随机出现在首页 · 你越写越多，随机池越神秘',
+    vault_placeholder: '写下你的神秘文案...', vault_add: '+ 加入文案库',
+    vault_empty: '暂无文案，快来添加吧', vault_edit: '编辑', vault_delete: '删除',
+    friends_title: '👥 我的好友', friends_following_tab: '我关注的',
+    friends_followers_tab: '关注我的', friends_mutual_tab: '好友（互关）',
+    friends_follow_back: '回关', friends_mutual_done: '已互关 ✓', friends_dm: '发私信',
+    friends_empty: '暂无用户', friends_loading: '加载中...', friends_failed: '加载失败',
+    chat_back: '← 返回', chat_placeholder: '说点什么...', chat_send: '发送',
+    chat_with: '与',chat_dm_suffix: '的私信',
+  },
+  en: {
+    nav_home: 'Home', nav_profile: 'Profile', nav_logout: 'Logout', nav_login: 'Login',
+    notif_title: 'Notifications', notif_followed: 'followed you', notif_empty: 'No notifications',
+    notif_loading: 'Loading...', notif_failed: 'Failed to load',
+    auth_welcome: 'Welcome Back', auth_login: 'Login', auth_register: 'Register',
+    auth_email: 'Email', auth_password: 'Password', auth_password_hint: 'Password (min 6 chars)',
+    auth_nickname: 'Nickname', auth_nickname_ph: 'Pick a fun name', auth_create: 'Create Account',
+    mystery_label: 'I Know Your Secret', mystery_open: 'Open', mystery_close: 'Close',
+    mystery_collapse: 'Collapse', mystery_see_author: 'See Who Wrote This',
+    mystery_following: 'Following ✓', mystery_follow: '+ Follow',
+    mystery_login_follow: 'Login to Follow', mystery_self: "That's you",
+    profile_edit_btn: '✏️ Edit Profile', profile_edit_title: 'Edit Profile',
+    profile_nickname: 'Nickname', profile_name_ph: 'Your name',
+    profile_bio_label: 'Bio', profile_bio_ph: 'Tell us about yourself...',
+    profile_save: 'Save', profile_cancel: 'Cancel', profile_no_bio: 'No bio yet',
+    vault_title: '🔮 My Secret Vault',
+    vault_desc: 'These appear randomly on the home page · The more you write, the more mysterious',
+    vault_placeholder: 'Write your secret...', vault_add: '+ Add to Vault',
+    vault_empty: 'No secrets yet, start writing', vault_edit: 'Edit', vault_delete: 'Delete',
+    friends_title: '👥 My Friends', friends_following_tab: 'Following',
+    friends_followers_tab: 'Followers', friends_mutual_tab: 'Friends',
+    friends_follow_back: 'Follow Back', friends_mutual_done: 'Friends ✓', friends_dm: 'Message',
+    friends_empty: 'No users yet', friends_loading: 'Loading...', friends_failed: 'Failed to load',
+    chat_back: '← Back', chat_placeholder: 'Say something...', chat_send: 'Send',
+    chat_with: 'Chat with', chat_dm_suffix: '',
+  }
+};
+
+let currentLang = localStorage.getItem('lang') || 'zh';
+
+function t(key) {
+  return TRANSLATIONS[currentLang]?.[key] ?? TRANSLATIONS.zh[key] ?? key;
+}
+
+function applyLang() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPh);
+  });
+}
+
+window.toggleLang = function() {
+  currentLang = currentLang === 'zh' ? 'en' : 'zh';
+  localStorage.setItem('lang', currentLang);
+  document.getElementById('navLangBtn').textContent = currentLang === 'zh' ? '中文 / EN' : 'EN / 中文';
+  applyLang();
+};
 
 // ──────────────────────────────────────────────
 // STATE
@@ -630,7 +711,7 @@ window.handleRegister = async (e) => {
   } catch (err) {
     showAuthError(friendlyError(err.code));
   } finally {
-    btn.disabled = false; btn.textContent = '创建账号';
+    btn.disabled = false; btn.textContent = t('auth_create');
   }
 };
 
@@ -649,7 +730,7 @@ window.handleLogin = async (e) => {
   } catch (err) {
     showAuthError(friendlyError(err.code));
   } finally {
-    btn.disabled = false; btn.textContent = '登录';
+    btn.disabled = false; btn.textContent = t('auth_login');
   }
 };
 
@@ -669,7 +750,7 @@ async function loadUserProfile(uid) {
   if (!snap.exists()) return;
   const data = snap.data();
   document.getElementById('profileName').textContent = data.name || '无名氏';
-  document.getElementById('profileBio').textContent = data.bio || '还没有简介';
+  document.getElementById('profileBio').textContent = data.bio || t('profile_no_bio');
   if (data.avatarUrl) {
     document.getElementById('profileAvatar').src = data.avatarUrl;
   } else {
@@ -786,7 +867,7 @@ function showRandomMystery() {
   document.getElementById('authorReveal').classList.remove('open');
   const authorBtn = document.getElementById('authorToggle');
   authorBtn.style.display = currentMysteryUid ? 'inline-block' : 'none';
-  authorBtn.textContent = '查看是谁写的';
+  authorBtn.textContent = t('mystery_see_author');
 }
 
 window.toggleMystery = function() {
@@ -794,7 +875,7 @@ window.toggleMystery = function() {
   const btn = document.getElementById('mysteryToggle');
   if (mysteryOpen) {
     el.classList.remove('open');
-    btn.textContent = '打开';
+    btn.textContent = t('mystery_open');
     mysteryOpen = false;
     document.getElementById('authorToggle').style.display = 'none';
     document.getElementById('authorReveal').classList.remove('open');
@@ -802,7 +883,7 @@ window.toggleMystery = function() {
   } else {
     showRandomMystery();
     el.classList.add('open');
-    btn.textContent = '关闭';
+    btn.textContent = t('mystery_close');
     mysteryOpen = true;
   }
 };
@@ -810,7 +891,7 @@ window.toggleMystery = function() {
 window.toggleAuthor = async function() {
   if (authorRevealed) {
     document.getElementById('authorReveal').classList.remove('open');
-    document.getElementById('authorToggle').textContent = '查看是谁写的';
+    document.getElementById('authorToggle').textContent = t('mystery_see_author');
     authorRevealed = false;
     return;
   }
@@ -832,22 +913,22 @@ window.toggleAuthor = async function() {
     // 设置关注按钮状态
     const followBtn = document.getElementById('followBtn');
     if (!currentUser) {
-      followBtn.textContent = '登录后关注';
+      followBtn.textContent = t('mystery_login_follow');
       followBtn.className = 'btn-follow followed';
     } else if (currentMysteryUid === currentUser.uid) {
-      followBtn.textContent = '这是你自己';
+      followBtn.textContent = t('mystery_self');
       followBtn.className = 'btn-follow followed';
     } else {
       const followSnap = await getDoc(doc(db, 'follows', `${currentUser.uid}_${currentMysteryUid}`));
-      followBtn.textContent = followSnap.exists() ? '已关注 ✓' : '+ 加为好友';
+      followBtn.textContent = followSnap.exists() ? t('mystery_following') : t('mystery_follow');
       followBtn.className = followSnap.exists() ? 'btn-follow followed' : 'btn-follow';
     }
 
     document.getElementById('authorReveal').classList.add('open');
-    btn.textContent = '收起';
+    btn.textContent = t('mystery_collapse');
     authorRevealed = true;
   } catch (err) {
-    btn.textContent = '查看是谁写的';
+    btn.textContent = t('mystery_see_author');
     alert('加载失败: ' + err.message);
   }
 };
@@ -863,7 +944,7 @@ window.toggleFollow = async function() {
     const snap = await getDoc(followRef);
     if (snap.exists()) {
       await deleteDoc(followRef);
-      btn.textContent = '+ 加为好友';
+      btn.textContent = t('mystery_follow');
       btn.className = 'btn-follow';
     } else {
       await setDoc(followRef, {
@@ -871,7 +952,7 @@ window.toggleFollow = async function() {
         to: currentMysteryUid,
         createdAt: serverTimestamp()
       });
-      btn.textContent = '已关注 ✓';
+      btn.textContent = t('mystery_following');
       btn.className = 'btn-follow followed';
       // Write follow notification to target user
       try {
@@ -922,7 +1003,7 @@ async function loadMyMysteries(uid) {
   try {
     const snap = await getDocs(q);
     if (snap.empty) {
-      container.innerHTML = '<div class="text-sm text-center" style="padding:12px 0;">暂无文案，快来添加吧</div>';
+      container.innerHTML = `<div class="text-sm text-center" style="padding:12px 0;">${t('vault_empty')}</div>`;
       return;
     }
     const docs = snap.docs.sort((a, b) => {
@@ -936,8 +1017,8 @@ async function loadMyMysteries(uid) {
         <div class="mystery-item" id="mystery-${d.id}">
           <div class="mystery-item-text">${esc(data.text)}</div>
           <div class="mystery-actions">
-            <button class="btn btn-secondary btn-sm" onclick="editMystery('${d.id}', this)">编辑</button>
-            <button class="btn btn-secondary btn-sm" style="color:var(--accent)" onclick="deleteMystery('${d.id}')">删除</button>
+            <button class="btn btn-secondary btn-sm" onclick="editMystery('${d.id}', this)">${t('vault_edit')}</button>
+            <button class="btn btn-secondary btn-sm" style="color:var(--accent)" onclick="deleteMystery('${d.id}')">${t('vault_delete')}</button>
           </div>
         </div>`;
     }).join('');
@@ -952,7 +1033,7 @@ window.editMystery = (id, btn) => {
   const textEl = item.querySelector('.mystery-item-text');
   const current = textEl.textContent;
   textEl.innerHTML = `<textarea style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-family:inherit;font-size:14px;resize:vertical;">${current}</textarea>`;
-  btn.textContent = '保存';
+  btn.textContent = t('profile_save');
   btn.onclick = () => saveMystery(id, item);
 };
 
@@ -1011,26 +1092,26 @@ window.toggleNotifDropdown = async function() {
   // Load and display notifications
   if (!currentUser) return;
   const listEl = document.getElementById('notifList');
-  listEl.innerHTML = '<div class="notif-item" style="color:var(--text2);">加载中...</div>';
+  listEl.innerHTML = `<div class="notif-item" style="color:var(--text2);">${t('notif_loading')}</div>`;
   let snap;
   try {
     const q = query(collection(db, 'notifications', currentUser.uid, 'items'), orderBy('createdAt', 'desc'));
     snap = await getDocs(q);
   } catch (err) {
-    listEl.innerHTML = '<div class="notif-item" style="color:var(--text2);">加载失败</div>';
+    listEl.innerHTML = `<div class="notif-item" style="color:var(--text2);">${t('notif_failed')}</div>`;
     console.warn('通知加载失败:', err.message);
     dropdown.classList.remove('hidden');
     return;
   }
   // Render notifications first
   if (snap.empty) {
-    listEl.innerHTML = '<div class="notif-item" style="color:var(--text2);">暂无通知</div>';
+    listEl.innerHTML = `<div class="notif-item" style="color:var(--text2);">${t('notif_empty')}</div>`;
   } else {
     const unreadIds = new Set(snap.docs.filter(d => !d.data().read).map(d => d.id));
     listEl.innerHTML = snap.docs.map(d => {
       const data = d.data();
       const isUnread = unreadIds.has(d.id);
-      const typeText = data.type === 'follow' ? '关注了你' : data.type;
+      const typeText = data.type === 'follow' ? t('notif_followed') : data.type;
       const timeStr = data.createdAt?.toDate ? timeAgo(data.createdAt.toDate()) : '';
       return `<div class="notif-item${isUnread ? ' unread' : ''}">
         <strong>${esc(data.fromName || '神秘用户')}</strong> ${typeText}
@@ -1078,7 +1159,7 @@ let _friendsData = { following: [], followers: [], profiles: {} };
 async function loadFriends() {
   if (!currentUser) return;
   const listEl = document.getElementById('friendsList');
-  listEl.innerHTML = '<div class="text-sm text-center" style="padding:12px 0;">加载中...</div>';
+  listEl.innerHTML = `<div class="text-sm text-center" style="padding:12px 0;">${t('friends_loading')}</div>`;
   try {
     const [followingSnap, followersSnap] = await Promise.all([
       getDocs(query(collection(db, 'follows'), where('from', '==', currentUser.uid))),
@@ -1096,7 +1177,7 @@ async function loadFriends() {
     }));
     renderFriendsTab();
   } catch (err) {
-    listEl.innerHTML = '<div class="text-sm text-center">加载失败</div>';
+    listEl.innerHTML = `<div class="text-sm text-center">${t('friends_failed')}</div>`;
   }
 }
 
@@ -1115,7 +1196,7 @@ function renderFriendsTab() {
     showDM = true;
   }
   if (uids.length === 0) {
-    listEl.innerHTML = '<div class="text-sm text-center" style="padding:12px 0;">暂无用户</div>';
+    listEl.innerHTML = `<div class="text-sm text-center" style="padding:12px 0;">${t('friends_empty')}</div>`;
     return;
   }
   listEl.innerHTML = uids.map(uid => {
@@ -1125,12 +1206,12 @@ function renderFriendsTab() {
     const avatar = p.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=e94560&color=fff`;
     let actionBtn = '';
     if (showDM) {
-      actionBtn = `<button class="btn btn-primary btn-sm" style="width:auto;flex-shrink:0;" onclick="openChat('${uid}')">发私信</button>`;
+      actionBtn = `<button class="btn btn-primary btn-sm" style="width:auto;flex-shrink:0;" onclick="openChat('${uid}')">${t('friends_dm')}</button>`;
     } else if (showFollowBack) {
       if (followingSet.has(uid)) {
-        actionBtn = `<button class="btn btn-sm" style="width:auto;flex-shrink:0;background:#2a2a3a;color:#aaa;border:1px solid #444;border-radius:8px;padding:6px 12px;cursor:default;" disabled>已互关 ✓</button>`;
+        actionBtn = `<button class="btn btn-sm" style="width:auto;flex-shrink:0;background:#2a2a3a;color:#aaa;border:1px solid #444;border-radius:8px;padding:6px 12px;cursor:default;" disabled>${t('friends_mutual_done')}</button>`;
       } else {
-        actionBtn = `<button id="followback-${uid}" class="btn btn-primary btn-sm" style="width:auto;flex-shrink:0;" onclick="followBack('${uid}')">回关</button>`;
+        actionBtn = `<button id="followback-${uid}" class="btn btn-primary btn-sm" style="width:auto;flex-shrink:0;" onclick="followBack('${uid}')">${t('friends_follow_back')}</button>`;
       }
     }
     return `<div class="friend-item">
@@ -1169,7 +1250,7 @@ window.followBack = async function(targetUid) {
     renderFriendsTab();
   } catch (err) {
     alert('回关失败: ' + err.message);
-    if (btn) { btn.disabled = false; btn.textContent = '回关'; }
+    if (btn) { btn.disabled = false; btn.textContent = t('friends_follow_back'); }
   }
 };
 
@@ -1182,7 +1263,9 @@ window.openChat = async function(otherUid) {
   // Set title from profile
   const profile = _friendsData.profiles[otherUid];
   const otherName = profile?.name || '对方';
-  document.getElementById('chatTitle').textContent = `与 ${otherName} 的私信`;
+  document.getElementById('chatTitle').textContent = currentLang === 'zh'
+    ? `与 ${otherName} 的私信`
+    : `Chat with ${otherName}`;
   document.getElementById('chatInput').value = '';
   document.getElementById('chatMessages').innerHTML = '';
   showPage('chat');
@@ -1256,6 +1339,12 @@ function friendlyError(code) {
   };
   return map[code] || '操作失败，请重试';
 }
+
+// ──────────────────────────────────────────────
+// INIT LANGUAGE
+// ──────────────────────────────────────────────
+document.getElementById('navLangBtn').textContent = currentLang === 'zh' ? '中文 / EN' : 'EN / 中文';
+applyLang();
 </script>
 </body>
 </html>
