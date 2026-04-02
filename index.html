@@ -995,6 +995,8 @@ function setupNotifListener(uid) {
     } else {
       badge.classList.add('hidden');
     }
+  }, (err) => {
+    console.warn('通知监听失败:', err.message);
   });
 }
 
@@ -1004,37 +1006,44 @@ window.toggleNotifDropdown = async function() {
     dropdown.classList.add('hidden');
     return;
   }
-  // Mark all as read and load list
+  // Load and display notifications
   if (!currentUser) return;
+  const listEl = document.getElementById('notifList');
+  listEl.innerHTML = '<div class="notif-item" style="color:var(--text2);">加载中...</div>';
+  let snap;
   try {
     const q = query(collection(db, 'notifications', currentUser.uid, 'items'), orderBy('createdAt', 'desc'));
-    const snap = await getDocs(q);
-    // Batch mark all unread as read
-    const unread = snap.docs.filter(d => !d.data().read);
-    if (unread.length > 0) {
-      const batch = writeBatch(db);
-      unread.forEach(d => batch.update(d.ref, { read: true }));
-      await batch.commit();
-    }
-    // Render notifications
-    const listEl = document.getElementById('notifList');
-    if (snap.empty) {
-      listEl.innerHTML = '<div class="notif-item" style="color:var(--text2);">暂无通知</div>';
-    } else {
-      listEl.innerHTML = snap.docs.map(d => {
-        const data = d.data();
-        const wasUnread = !data.read || unread.some(u => u.id === d.id);
-        const typeText = data.type === 'follow' ? '关注了你' : data.type;
-        const timeStr = data.createdAt?.toDate ? timeAgo(data.createdAt.toDate()) : '';
-        return `<div class="notif-item${wasUnread ? ' unread' : ''}">
-          <strong>${esc(data.fromName || '神秘用户')}</strong> ${typeText}
-          <span style="color:var(--text2);font-size:11px;margin-left:6px;">${timeStr}</span>
-        </div>`;
-      }).join('');
-    }
+    snap = await getDocs(q);
   } catch (err) {
-    document.getElementById('notifList').innerHTML =
-      '<div class="notif-item" style="color:var(--text2);">加载失败</div>';
+    listEl.innerHTML = '<div class="notif-item" style="color:var(--text2);">加载失败</div>';
+    console.warn('通知加载失败:', err.message);
+    dropdown.classList.remove('hidden');
+    return;
+  }
+  // Render notifications first
+  if (snap.empty) {
+    listEl.innerHTML = '<div class="notif-item" style="color:var(--text2);">暂无通知</div>';
+  } else {
+    const unreadIds = new Set(snap.docs.filter(d => !d.data().read).map(d => d.id));
+    listEl.innerHTML = snap.docs.map(d => {
+      const data = d.data();
+      const isUnread = unreadIds.has(d.id);
+      const typeText = data.type === 'follow' ? '关注了你' : data.type;
+      const timeStr = data.createdAt?.toDate ? timeAgo(data.createdAt.toDate()) : '';
+      return `<div class="notif-item${isUnread ? ' unread' : ''}">
+        <strong>${esc(data.fromName || '神秘用户')}</strong> ${typeText}
+        <span style="color:var(--text2);font-size:11px;margin-left:6px;">${timeStr}</span>
+      </div>`;
+    }).join('');
+    // Mark as read in background (non-fatal)
+    try {
+      const unreadDocs = snap.docs.filter(d => !d.data().read);
+      if (unreadDocs.length > 0) {
+        const batch = writeBatch(db);
+        unreadDocs.forEach(d => batch.update(d.ref, { read: true }));
+        await batch.commit();
+      }
+    } catch (_) { /* 标记已读失败不影响显示 */ }
   }
   dropdown.classList.remove('hidden');
 };
