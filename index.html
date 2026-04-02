@@ -267,6 +267,50 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ─── NOTIFICATION BELL ──────────────────── */
+    .nav-bell-wrap { display: none; }
+    .nav-bell-wrap.show { display: inline-flex !important; }
+
+    /* ─── CHAT MESSAGES ──────────────────────── */
+    .chat-bubble {
+      max-width: 72%; padding: 10px 14px; border-radius: 18px;
+      font-size: 14px; line-height: 1.5; word-break: break-word;
+    }
+    .chat-bubble-mine {
+      background: var(--accent); color: #fff;
+      border-bottom-right-radius: 4px; align-self: flex-end;
+    }
+    .chat-bubble-other {
+      background: var(--surface2); color: var(--text);
+      border-bottom-left-radius: 4px; align-self: flex-start;
+    }
+    .chat-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+    .chat-row { display: flex; flex-direction: column; }
+    .chat-row-mine { align-items: flex-end; }
+    .chat-row-other { align-items: flex-start; }
+
+    /* ─── FRIENDS LIST ────────────────────────── */
+    .friend-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .friend-item:last-child { border-bottom: none; }
+    .friend-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      object-fit: cover; border: 2px solid var(--border); flex-shrink: 0;
+    }
+    .friend-info { flex: 1; }
+    .friend-name { font-weight: 600; font-size: 14px; }
+    .friend-bio { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+    /* ─── NOTIF ITEM ──────────────────────────── */
+    .notif-item {
+      padding: 10px 16px; font-size: 13px; border-bottom: 1px solid var(--border);
+      line-height: 1.5;
+    }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-item.unread { background: rgba(233,69,96,.08); }
+
     .hidden { display: none !important; }
     .text-center { text-align: center; }
     .text-sm { font-size: 13px; color: var(--text2); }
@@ -299,6 +343,14 @@
   <div class="nav-links" id="navLinks">
     <button class="nav-btn" onclick="showPage('home')">首页</button>
     <button class="nav-btn hidden" id="navProfile" onclick="showPage('profile')">我的</button>
+    <div class="nav-bell-wrap hidden" id="navBellWrap" style="position:relative;display:inline-flex;align-items:center;">
+      <button class="nav-btn" id="navBell" onclick="toggleNotifDropdown()" style="padding:8px 12px;font-size:18px;line-height:1;">🔔</button>
+      <span id="notifBadge" class="hidden" style="position:absolute;top:2px;right:2px;background:var(--accent);color:#fff;border-radius:50%;font-size:11px;font-weight:700;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;pointer-events:none;padding:0 3px;"></span>
+      <div id="notifDropdown" class="hidden" style="position:absolute;top:calc(100% + 8px);right:0;width:280px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:999;max-height:360px;overflow-y:auto;">
+        <div style="padding:12px 16px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);">通知</div>
+        <div id="notifList" style="padding:8px 0;"></div>
+      </div>
+    </div>
     <button class="nav-btn hidden" id="navLogout" onclick="logout()">退出</button>
     <button class="nav-btn" id="navLogin" onclick="showPage('auth')">登录</button>
   </div>
@@ -417,6 +469,30 @@
     </div>
   </div>
 
+  <!-- Friends list -->
+  <div class="card" id="friendsCard">
+    <h3 style="margin-bottom:16px;">👥 我的好友</h3>
+    <div style="display:flex;gap:0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);margin-bottom:16px;">
+      <button class="auth-tab active" id="friendsTab0" onclick="switchFriendsTab(0)">我关注的</button>
+      <button class="auth-tab" id="friendsTab1" onclick="switchFriendsTab(1)">关注我的</button>
+      <button class="auth-tab" id="friendsTab2" onclick="switchFriendsTab(2)">好友（互关）</button>
+    </div>
+    <div id="friendsList" style="min-height:60px;"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════ CHAT PAGE -->
+<div class="page" id="pageChat">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+    <button class="btn btn-secondary btn-sm" style="width:auto;" onclick="showPage('profile')">← 返回</button>
+    <h3 id="chatTitle" style="flex:1;font-size:16px;"></h3>
+  </div>
+  <div id="chatMessages" style="min-height:300px;max-height:55vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 0;margin-bottom:16px;"></div>
+  <div style="display:flex;gap:10px;">
+    <input type="text" id="chatInput" placeholder="说点什么..." style="flex:1;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:16px;font-family:inherit;outline:none;-webkit-appearance:none;appearance:none;" onkeydown="if(event.key==='Enter')sendMessage()">
+    <button class="btn btn-primary btn-sm" style="width:auto;min-height:44px;padding:0 20px;" onclick="sendMessage()">发送</button>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════ FIREBASE + APP JS -->
@@ -428,7 +504,8 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import {
   getFirestore, collection, doc, setDoc, getDoc, addDoc, getDocs,
-  query, orderBy, where, deleteDoc, serverTimestamp, onSnapshot
+  query, orderBy, where, deleteDoc, serverTimestamp, onSnapshot,
+  writeBatch, limit
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 // ──────────────────────────────────────────────
@@ -457,6 +534,10 @@ let currentMysteryIndex = -1;
 let unsubscribeMysteries = null;
 let currentMysteryUid = null;  // uid of currently shown mystery's author
 let authorRevealed = false;
+let unsubscribeNotifs = null;
+let unsubscribeChat = null;
+let currentChatId = null;
+let currentFriendsTab = 0;
 
 // ──────────────────────────────────────────────
 // AUTH STATE
@@ -467,11 +548,15 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById('navProfile').classList.remove('hidden');
     document.getElementById('navLogout').classList.remove('hidden');
     document.getElementById('navLogin').classList.add('hidden');
+    document.getElementById('navBellWrap').classList.add('show');
     await loadUserProfile(user.uid);
+    setupNotifListener(user.uid);
   } else {
     document.getElementById('navProfile').classList.add('hidden');
     document.getElementById('navLogout').classList.add('hidden');
     document.getElementById('navLogin').classList.remove('hidden');
+    document.getElementById('navBellWrap').classList.remove('show');
+    if (unsubscribeNotifs) { unsubscribeNotifs(); unsubscribeNotifs = null; }
   }
   loadMysteries();
 });
@@ -481,11 +566,12 @@ onAuthStateChanged(auth, async (user) => {
 // ──────────────────────────────────────────────
 window.showPage = (name) => {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const map = { home: 'pageHome', auth: 'pageAuth', profile: 'pageProfile' };
+  const map = { home: 'pageHome', auth: 'pageAuth', profile: 'pageProfile', chat: 'pageChat' };
   document.getElementById(map[name])?.classList.add('active');
   if (name === 'profile' && currentUser) {
     loadUserProfile(currentUser.uid);
     loadMyMysteries(currentUser.uid);
+    loadFriends();
   }
 };
 
@@ -782,6 +868,16 @@ window.toggleFollow = async function() {
       });
       btn.textContent = '已关注 ✓';
       btn.className = 'btn-follow followed';
+      // Write follow notification to target user
+      try {
+        await addDoc(collection(db, 'notifications', currentMysteryUid, 'items'), {
+          from: currentUser.uid,
+          fromName: currentUser.displayName || '神秘用户',
+          type: 'follow',
+          createdAt: serverTimestamp(),
+          read: false
+        });
+      } catch (_) { /* notification failure is non-fatal */ }
     }
   } catch (err) {
     alert('操作失败: ' + err.message);
@@ -874,6 +970,205 @@ window.deleteMystery = async (id) => {
     await loadMyMysteries(currentUser.uid);
   } catch (err) {
     alert('删除失败: ' + err.message);
+  }
+};
+
+// ──────────────────────────────────────────────
+// FEATURE 1: NOTIFICATIONS
+// ──────────────────────────────────────────────
+function setupNotifListener(uid) {
+  if (unsubscribeNotifs) unsubscribeNotifs();
+  const q = query(
+    collection(db, 'notifications', uid, 'items'),
+    where('read', '==', false)
+  );
+  unsubscribeNotifs = onSnapshot(q, (snap) => {
+    const count = snap.size;
+    const badge = document.getElementById('notifBadge');
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : String(count);
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  });
+}
+
+window.toggleNotifDropdown = async function() {
+  const dropdown = document.getElementById('notifDropdown');
+  if (!dropdown.classList.contains('hidden')) {
+    dropdown.classList.add('hidden');
+    return;
+  }
+  // Mark all as read and load list
+  if (!currentUser) return;
+  try {
+    const q = query(collection(db, 'notifications', currentUser.uid, 'items'), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    // Batch mark all unread as read
+    const unread = snap.docs.filter(d => !d.data().read);
+    if (unread.length > 0) {
+      const batch = writeBatch(db);
+      unread.forEach(d => batch.update(d.ref, { read: true }));
+      await batch.commit();
+    }
+    // Render notifications
+    const listEl = document.getElementById('notifList');
+    if (snap.empty) {
+      listEl.innerHTML = '<div class="notif-item" style="color:var(--text2);">暂无通知</div>';
+    } else {
+      listEl.innerHTML = snap.docs.map(d => {
+        const data = d.data();
+        const wasUnread = !data.read || unread.some(u => u.id === d.id);
+        const typeText = data.type === 'follow' ? '关注了你' : data.type;
+        const timeStr = data.createdAt?.toDate ? timeAgo(data.createdAt.toDate()) : '';
+        return `<div class="notif-item${wasUnread ? ' unread' : ''}">
+          <strong>${esc(data.fromName || '神秘用户')}</strong> ${typeText}
+          <span style="color:var(--text2);font-size:11px;margin-left:6px;">${timeStr}</span>
+        </div>`;
+      }).join('');
+    }
+  } catch (err) {
+    document.getElementById('notifList').innerHTML =
+      '<div class="notif-item" style="color:var(--text2);">加载失败</div>';
+  }
+  dropdown.classList.remove('hidden');
+};
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('navBellWrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('notifDropdown')?.classList.add('hidden');
+  }
+});
+
+// ──────────────────────────────────────────────
+// FEATURE 2: FRIENDS LIST
+// ──────────────────────────────────────────────
+window.switchFriendsTab = (tab) => {
+  currentFriendsTab = tab;
+  [0, 1, 2].forEach(i => {
+    document.getElementById(`friendsTab${i}`)?.classList.toggle('active', i === tab);
+  });
+  renderFriendsTab();
+};
+
+let _friendsData = { following: [], followers: [], profiles: {} };
+
+async function loadFriends() {
+  if (!currentUser) return;
+  const listEl = document.getElementById('friendsList');
+  listEl.innerHTML = '<div class="text-sm text-center" style="padding:12px 0;">加载中...</div>';
+  try {
+    const [followingSnap, followersSnap] = await Promise.all([
+      getDocs(query(collection(db, 'follows'), where('from', '==', currentUser.uid))),
+      getDocs(query(collection(db, 'follows'), where('to', '==', currentUser.uid)))
+    ]);
+    const following = followingSnap.docs.map(d => d.data().to);
+    const followers = followersSnap.docs.map(d => d.data().from);
+    _friendsData = { following, followers, profiles: {} };
+
+    // Fetch all unique uids' profiles
+    const allUids = [...new Set([...following, ...followers])];
+    await Promise.all(allUids.map(async (uid) => {
+      const snap = await getDoc(doc(db, 'users', uid));
+      _friendsData.profiles[uid] = snap.exists() ? snap.data() : { name: '神秘用户', bio: '', avatarUrl: '' };
+    }));
+    renderFriendsTab();
+  } catch (err) {
+    listEl.innerHTML = '<div class="text-sm text-center">加载失败</div>';
+  }
+}
+
+function renderFriendsTab() {
+  const listEl = document.getElementById('friendsList');
+  const { following, followers, profiles } = _friendsData;
+  let uids = [];
+  let showDM = false;
+  if (currentFriendsTab === 0) { uids = following; }
+  else if (currentFriendsTab === 1) { uids = followers; }
+  else {
+    // Mutual follows
+    const followingSet = new Set(following);
+    uids = followers.filter(uid => followingSet.has(uid));
+    showDM = true;
+  }
+  if (uids.length === 0) {
+    listEl.innerHTML = '<div class="text-sm text-center" style="padding:12px 0;">暂无用户</div>';
+    return;
+  }
+  listEl.innerHTML = uids.map(uid => {
+    const p = profiles[uid] || {};
+    const name = p.name || '神秘用户';
+    const bio = p.bio || '暂无简介';
+    const avatar = p.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=e94560&color=fff`;
+    const dmBtn = showDM
+      ? `<button class="btn btn-primary btn-sm" style="width:auto;flex-shrink:0;" onclick="openChat('${uid}')">发私信</button>`
+      : '';
+    return `<div class="friend-item">
+      <img class="friend-avatar" src="${esc(avatar)}" alt="头像" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=e94560&color=fff'">
+      <div class="friend-info">
+        <div class="friend-name">${esc(name)}</div>
+        <div class="friend-bio">${esc(bio)}</div>
+      </div>
+      ${dmBtn}
+    </div>`;
+  }).join('');
+}
+
+// ──────────────────────────────────────────────
+// FEATURE 3: DM CHAT
+// ──────────────────────────────────────────────
+window.openChat = async function(otherUid) {
+  if (!currentUser) { showPage('auth'); return; }
+  currentChatId = [currentUser.uid, otherUid].sort().join('_');
+  // Set title from profile
+  const profile = _friendsData.profiles[otherUid];
+  const otherName = profile?.name || '对方';
+  document.getElementById('chatTitle').textContent = `与 ${otherName} 的私信`;
+  document.getElementById('chatInput').value = '';
+  document.getElementById('chatMessages').innerHTML = '';
+  showPage('chat');
+
+  // Unsubscribe old listener
+  if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
+
+  const q = query(
+    collection(db, 'messages', currentChatId, 'msgs'),
+    orderBy('createdAt', 'asc')
+  );
+  unsubscribeChat = onSnapshot(q, (snap) => {
+    const container = document.getElementById('chatMessages');
+    container.innerHTML = snap.docs.map(d => {
+      const data = d.data();
+      const isMine = data.from === currentUser.uid;
+      const timeStr = data.createdAt?.toDate ? timeAgo(data.createdAt.toDate()) : '';
+      return `<div class="chat-row ${isMine ? 'chat-row-mine' : 'chat-row-other'}">
+        <div class="chat-bubble ${isMine ? 'chat-bubble-mine' : 'chat-bubble-other'}">${esc(data.text)}</div>
+        <div class="chat-meta">${timeStr}</div>
+      </div>`;
+    }).join('');
+    // Scroll to bottom
+    container.scrollTop = container.scrollHeight;
+  });
+};
+
+window.sendMessage = async function() {
+  if (!currentUser || !currentChatId) return;
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  try {
+    await addDoc(collection(db, 'messages', currentChatId, 'msgs'), {
+      from: currentUser.uid,
+      text,
+      createdAt: serverTimestamp()
+    });
+  } catch (err) {
+    alert('发送失败: ' + err.message);
+    input.value = text;
   }
 };
 
